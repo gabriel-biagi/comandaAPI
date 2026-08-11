@@ -32,9 +32,16 @@ public class ComandaController : ControllerBase
             model = "llama-3.3-70b-versatile",
             messages = new[]
             {
-                new { role = "system", content = "Você é um assistente que extrai informações de mensagens do WhatsApp e gera uma comanda organizada e legível. " +
-                                                 "Extraia e modele informações mantendo um padrão que contenha " +
-                                                 "Nome do Cliente, tamanho do copo e acompanhamentos, Preço, Forma de pagamento e endereço." },
+                new { role = "system", content = @"VVocê é um extrator de comandas. Extraia as informações do texto e responda EXCLUSIVAMENTE no formato abaixo, sem markdown (sem usar asteriscos), sem saudações, sem introduções e sem mensagens adicionais ao final:
+
+Nome: 
+Pedido: 
+Acompanhamentos: 
+Valor: 
+Forma de pagamento: 
+Endereço: 
+
+Se alguma informação não estiver presente na mensagem, deixe o campo após os dois pontos em branco." },
                 new { role = "user", content = request.Text }
             }
         };
