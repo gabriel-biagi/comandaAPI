@@ -1,4 +1,3 @@
-```markdown
 # 📋 Processador de Comandas WhatsApp
 
 ## 📌 Sobre o Projeto
@@ -41,40 +40,34 @@ comandaAPI/
 │   └── script.js
 ├── appsettings.json            # Configurações do projeto
 └── Program.cs                  # Pipeline e inicialização da aplicação
+Funcionamento do Controller (ComandaController)
+A rota HTTP ProcessarComanda é responsável por:
 
-```
+Receber o payload do front-end contendo a mensagem bruta do WhatsApp via POST.
 
-### Funcionamento do Controller (`ComandaController`)
+Executar a comunicação direta com a API da Groq (llama-3.3-70b-versatile), repassando o contexto do prompt do sistema com restrições rígidas de formatação.
 
-A rota HTTP `ProcessarComanda` é responsável por:
+Processar a resposta e retornar o texto padronizado do pedido sem poluição de markdown ou mensagens adicionais.
 
-1. Receber o payload do front-end contendo a mensagem bruta do WhatsApp via `POST`.
-2. Executar a comunicação direta com a API da Groq (`llama-3.3-70b-versatile`), repassando o contexto do prompt do sistema com restrições rígidas de formatação.
-3. Processar a resposta e retornar o texto padronizado do pedido sem poluição de markdown ou mensagens adicionais.
+🚀 Como Executar o Projeto
+Pré-requisitos
+.NET 8 SDK instalado.
 
----
+Chave de API da Groq Cloud.
 
-## 🚀 Como Executar o Projeto
+Passo a Passo
+Clone o repositório:
 
-### Pré-requisitos
-
-* [.NET 8 SDK](https://dotnet.microsoft.com/download) instalado.
-* Chave de API da [Groq Cloud](https://console.groq.com/).
-
-### Passo a Passo
-
-1. **Clone o repositório:**
-```bash
-git clone [https://github.com/gabriel-biagi/comandaAPI.git](https://github.com/gabriel-biagi/comandaAPI.git)
+Bash
+git clone https://github.com/gabriel-biagi/comandaAPI.git
 cd comandaAPI
-```
+Configure a Chave da API:
+Adicione sua GroqApiKey nas variáveis de ambiente ou no arquivo appsettings.Development.json.
 
-2. **Configure a Chave da API:**
-Adicione sua `GroqApiKey` nas variáveis de ambiente ou no arquivo `appsettings.Development.json`.
-3. **Execute a aplicação:**
-```bash
+Execute a aplicação:
+
+Bash
 dotnet run
-```
-4. **Acesse no navegador:**
-Abra `http://localhost:5084` no seu navegador.
-
+Acesse no navegador:
+Abra http://localhost:5084 no seu navegador.
+EOF
