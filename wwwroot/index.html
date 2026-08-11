@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processador de Comanda WhatsApp</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --error-color: #ef4444;
+            --success-color: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-color);
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-color);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        button {
+            flex: 1;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        button.secondary:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-message {
+            font-size: 0.875rem;
+            text-align: center;
+            min-height: 1.25rem;
+        }
+
+        .status-message.error {
+            color: var(--error-color);
+        }
+
+        .status-message.success {
+            color: var(--success-color);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.25rem;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Processador de Comanda</h1>
+
+        <!-- Seção de Entrada -->
+        <div class="input-group">
+            <label for="inputTexto">Texto do WhatsApp</label>
+            <textarea id="inputTexto" placeholder="Cole ou digite o texto recebido aqui..."></textarea>
+            <div class="button-group">
+                <button type="button" id="btnColar" class="secondary">Colar da Área de Transferência</button>
+                <button type="button" id="btnEnviar">
+                    <span class="btn-text">Enviar</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Seção de Resultado -->
+        <div class="input-group">
+            <label for="outputTexto">Resultado Retornado</label>
+            <textarea id="outputTexto" placeholder="O resultado editável aparecerá aqui..."></textarea>
+            <div class="button-group">
+                <button type="button" id="btnCopiar" class="secondary">Copiar Resultado</button>
+            </div>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <script>
+        const inputTexto = document.getElementById('inputTexto');
+        const outputTexto = document.getElementById('outputTexto');
+        const btnColar = document.getElementById('btnColar');
+        const btnEnviar = document.getElementById('btnEnviar');
+        const btnCopiar = document.getElementById('btnCopiar');
+        const spinner = document.getElementById('spinner');
+        const btnEnviarText = btnEnviar.querySelector('.btn-text');
+        const statusMessage = document.getElementById('statusMessage');
+
+        function showStatus(message, type = '') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            if (type !== 'error') {
+                setTimeout(() => {
+                    if (statusMessage.textContent === message) {
+                        statusMessage.textContent = '';
+                        statusMessage.className = 'status-message';
+                    }
+                }, 4000);
+            }
+        }
+
+        // 1. Botão 'Colar' usando Clipboard API
+        btnColar.addEventListener('click', async () => {
+            try {
+                if (!navigator.clipboard || !navigator.clipboard.readText) {
+                    throw new Error('A API de Área de Transferência não é suportada neste navegador.');
+                }
+                const text = await navigator.clipboard.readText();
+                inputTexto.value = text;
+                showStatus('Texto colado com sucesso!', 'success');
+            } catch (err) {
+                console.error(err);
+                showStatus('Falha ao colar. Verifique as permissões do navegador.', 'error');
+            }
+        });
+
+        // 2. Botão 'Enviar' fazendo fetch POST para o backend
+        btnEnviar.addEventListener('click', async () => {
+            const textValue = inputTexto.value.trim();
+            
+            if (!textValue) {
+                showStatus('Por favor, insira ou cole algum texto primeiro.', 'error');
+                inputTexto.focus();
+                return;
+            }
+
+            // Ativar loading
+            btnEnviar.disabled = true;
+            spinner.style.display = 'block';
+            btnEnviarText.style.display = 'none';
+            statusMessage.textContent = '';
+
+            try {
+                const response = await fetch('http://localhost:5084/api/comanda', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: textValue })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro no servidor: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Tratando o retorno (pode vir como string ou objeto JSON estruturado)
+                if (typeof data === 'string') {
+                    outputTexto.value = data;
+                } else if (data && data.result) {
+                    outputTexto.value = data.result;
+                } else {
+                    outputTexto.value = JSON.stringify(data, null, 2);
+                }
+
+                showStatus('Processado com sucesso!', 'success');
+            } catch (err) {
+                console.error(err);
+                showStatus('Não foi possível conectar ao servidor. Certifique-se de que o backend está rodando em localhost:5084.', 'error');
+            } finally {
+                // Desativar loading
+                btnEnviar.disabled = false;
+                spinner.style.display = 'none';
+                btnEnviarText.style.display = 'inline';
+            }
+        });
+
+        // 3. Botão 'Copiar' para o resultado editável
+        btnCopiar.addEventListener('click', async () => {
+            const outputValue = outputTexto.value;
+
+            if (!outputValue) {
+                showStatus('Não há conteúdo para copiar.', 'error');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(outputValue);
+                showStatus('Resultado copiado para a área de transferência!', 'success');
+            } catch (err) {
+                console.error(err);
+                // Fallback caso navigator.clipboard falhe
+                outputTexto.select();
+                document.execCommand('copy');
+                showStatus('Resultado copiado!', 'success');
+            }
+        });
+    </script>
+</body>
+</html>
