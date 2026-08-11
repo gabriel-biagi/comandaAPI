@@ -70,4 +70,3 @@ Bash
 dotnet run
 Acesse no navegador:
 Abra http://localhost:5084 no seu navegador.
-EOF
