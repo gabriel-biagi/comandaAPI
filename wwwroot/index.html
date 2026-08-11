@@ -248,7 +248,7 @@
             statusMessage.textContent = '';
 
             try {
-                const response = await fetch('http://localhost:5084/api/comanda', {
+                const response = await fetch('/api/comanda', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -274,7 +274,7 @@
                 showStatus('Processado com sucesso!', 'success');
             } catch (err) {
                 console.error(err);
-                showStatus('Não foi possível conectar ao servidor. Certifique-se de que o backend está rodando em localhost:5084.', 'error');
+                showStatus('Não foi possível conectar ao servidor. Certifique-se de que o backend está rodando na porta 5084.', 'error');
             } finally {
                 // Desativar loading
                 btnEnviar.disabled = false;
