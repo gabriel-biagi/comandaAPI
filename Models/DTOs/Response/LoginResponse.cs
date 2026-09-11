@@ -1,6 +1,6 @@
-namespace comandaAPI.Models.Response;
+namespace comandaAPI.Models.DTOs.Response;
 
-public class RegisterResponse
+public class LoginResponse
 {
     public bool Success { get; set; }
     public string? Message { get; set; }

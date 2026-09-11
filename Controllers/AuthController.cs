@@ -1,9 +1,9 @@
-using comandaAPI.Models.Response;
+using comandaAPI.Models.DTOs.Response;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using RegisterRequest = comandaAPI.Models.Request.RegisterRequest;
-using LoginRequest = comandaAPI.Models.Request.LoginRequest;
+using RegisterRequest = comandaAPI.Models.DTOs.Request.RegisterRequest;
+using LoginRequest = comandaAPI.Models.DTOs.Request.LoginRequest;
 
 namespace comandaAPI.Controllers;
 

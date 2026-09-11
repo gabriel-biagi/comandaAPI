@@ -1,4 +1,5 @@
 using comandaAPI.Models.Context;
+using comandaAPI.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ComandaDbContext>(options =>
     options.UseSqlite("Data Source=comanda.db"));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ComandaDbContext>()
     .AddDefaultTokenProviders();
 

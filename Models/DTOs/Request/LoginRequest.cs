@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace comandaAPI.Models.Request;
+namespace comandaAPI.Models.DTOs.Request;
 
 public class LoginRequest
 {

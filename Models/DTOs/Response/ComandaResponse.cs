@@ -1,4 +1,4 @@
-namespace comandaAPI.Models
+namespace comandaAPI.Models.DTOs.Response
 {
     public class ComandaResponse
     {
