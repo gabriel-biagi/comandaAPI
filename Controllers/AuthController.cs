@@ -1,8 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using comandaAPI.Models.DTOs.Request;
 using comandaAPI.Models.DTOs.Response;
 using comandaAPI.Models.Identity;
 using comandaAPI.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +29,8 @@ public class AuthController : Controller
         _tokenService = tokenService;
         _configuration = configuration;
     }
-
+    
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [Route("Register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -55,7 +58,7 @@ public class AuthController : Controller
         _logger.LogInformation(1, $"User {user.UserName} created successfully");
         return Ok(new RegisterResponse { Success = true, Message = "User created successfully!" });
     }
-
+    
     [HttpPost]
     [Route("Login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -104,5 +107,22 @@ public class AuthController : Controller
         });
     }
     
+    [Authorize(Roles = "Admin")]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+        var user = await _userManager.FindByNameAsync(userName);
+    
+        if (user == null)
+            return BadRequest(new { error = "User not found" });
+    
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        return Ok("Password changed successfully");
+    }
     
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using comandaAPI.Models;
 using comandaAPI.Models.DTOs.Request;
 using comandaAPI.Models.DTOs.Response;
+using Microsoft.AspNetCore.Authorization;
 
 namespace comandaAPI.Controllers;
 
@@ -21,6 +22,7 @@ public class ComandaController : ControllerBase
         _configuration = configuration;
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> ProcessarComanda([FromBody] ComandaRequest request)
     {
