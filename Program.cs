@@ -1,5 +1,7 @@
 using comandaAPI.Models.Context;
 using comandaAPI.Models.Identity;
+using comandaAPI.Services;
+using comandaAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +18,8 @@ builder.Services.AddDbContext<ComandaDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ComandaDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddCors(options =>
 {
