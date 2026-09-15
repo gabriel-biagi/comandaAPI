@@ -101,7 +101,6 @@ btnLogin.addEventListener('click', async () => {
         }
 
         if (data.token && data.token.accessToken) {
-            setToken(data.token.accessToken);
             showStatus('Login realizado com sucesso!', 'success', 'loginStatus');
             setTimeout(() => {
                 showComandaScreen();
@@ -152,12 +151,6 @@ btnEnviar.addEventListener('click', async () => {
         return;
     }
 
-    const token = getToken();
-    if (!token) {
-        showStatus('Token não encontrado. Faça login novamente.', 'error', 'comandaStatus');
-        return;
-    }
-
     // Ativar loading
     btnEnviar.disabled = true;
     spinner.style.display = 'block';
@@ -168,10 +161,10 @@ btnEnviar.addEventListener('click', async () => {
         const response = await fetch(API_URL + '/api/comanda', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ text: textValue })
+            body: JSON.stringify({ text: textValue }),
+            credentials: 'include'
         });
 
         if (!response.ok) {

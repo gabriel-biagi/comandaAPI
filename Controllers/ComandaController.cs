@@ -15,11 +15,13 @@ public class ComandaController : ControllerBase
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<ComandaController> _logger;
 
-    public ComandaController(HttpClient httpClient, IConfiguration configuration)
+    public ComandaController(HttpClient httpClient, IConfiguration configuration, ILogger<ComandaController> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
+        _logger = logger;
     }
 
     [Authorize]
@@ -64,7 +66,7 @@ Se alguma informação não estiver presente na mensagem, deixe o campo após os
 
         if (!response.IsSuccessStatusCode)
         {
-            return StatusCode((int)response.StatusCode, "Erro ao processar na API do Groq.");
+            return StatusCode((int)response.StatusCode, new { error = "Erro ao processar na API do Groq." });
         }
 
         string jsonResponse = await response.Content.ReadAsStringAsync();
