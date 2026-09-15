@@ -1,4 +1,4 @@
-const API_URL = 'http://192.168.2.78:5084';
+const API_URL = 'http://localhost:5084';
 
 // Elementos do Login
 const loginScreen = document.getElementById('loginScreen');
@@ -37,10 +37,6 @@ function showStatus(message, type = '', elementId = 'loginStatus') {
 
 function getToken() {
     return localStorage.getItem('accessToken');
-}
-
-function setToken(token) {
-    localStorage.setItem('accessToken', token);
 }
 
 function clearToken() {
@@ -93,7 +89,8 @@ btnLogin.addEventListener('click', async () => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password }),
+            credentials: 'include'
         });
 
         const data = await response.json();

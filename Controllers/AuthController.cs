@@ -63,66 +63,77 @@ public class AuthController : Controller
     [Route("Login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await _userManager.FindByNameAsync(request.Username);
-        if (user is null)
+        try
         {
-            return Unauthorized(new LoginResponse { Success = false, Message = "Invalid credentials" });
-        }
-        
-        var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
-    
-        if (!isPasswordValid)
-            return Unauthorized(new LoginResponse { Success = false, Message = "Invalid credentials" });
-        
-        var authClaims = new List<Claim>
+            var user = await _userManager.FindByNameAsync(request.Username);
+            if (user is null)
+            {
+                return Unauthorized(new LoginResponse { Success = false, Message = "Invalid credentials" });
+            }
+
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+
+            if (!isPasswordValid)
+                return Unauthorized(new LoginResponse { Success = false, Message = "Invalid credentials" });
+
+            var authClaims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.UserName!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
-        var userRoles = await _userManager.GetRolesAsync(user);
-        foreach (var userRole in userRoles)
-        {
-            authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-        }
-        
-        var accessToken = _tokenService.GenerateAccessToken(authClaims, _configuration);
-        var accessTokenString = new JwtSecurityTokenHandler().WriteToken(accessToken);
-        var refreshToken = _tokenService.GenerateRefreshToken();
-        
-        _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
-        
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays);
-        
-        await _userManager.UpdateAsync(user);
-        return Ok(new LoginResponse 
-        { 
-            Success = true,
-            Message = "Login successful",
-            Token = new TokenResponse 
-            { 
-                AccessToken = accessTokenString,
-                RefreshToken = refreshToken 
+            var userRoles = await _userManager.GetRolesAsync(user);
+            foreach (var userRole in userRoles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, userRole));
             }
-        });
+
+            var accessToken = _tokenService.GenerateAccessToken(authClaims, _configuration);
+            var accessTokenString = new JwtSecurityTokenHandler().WriteToken(accessToken);
+
+            Response.Cookies.Append(
+        "accessToken",
+        accessTokenString,
+        new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddMinutes(15)
+        }
+    );
+
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays);
+
+            await _userManager.UpdateAsync(user);
+            return Ok(new LoginResponse
+            {
+                Success = true,
+                Message = "Login successful",
+                Token = new TokenResponse
+                {
+                    AccessToken = accessTokenString,
+                    RefreshToken = refreshToken
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected login error");
+            return StatusCode(500, new { error = "An unexpected error occurred" });
+        }
     }
-    
-    [Authorize(Roles = "Admin")]
-    [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+
+    [HttpPost("logout")]
+    [Authorize]
+    public IActionResult Logout()
     {
-        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-        var user = await _userManager.FindByNameAsync(userName);
-    
-        if (user == null)
-            return BadRequest(new { error = "User not found" });
-    
-        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
-
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
-
-        return Ok("Password changed successfully");
+        Response.Cookies.Delete("accessToken");
+        return Ok("Logged out successfully");
     }
-    
+
 }

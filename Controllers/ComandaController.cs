@@ -27,7 +27,6 @@ public class ComandaController : ControllerBase
     public async Task<IActionResult> ProcessarComanda([FromBody] ComandaRequest request)
     {
         string apiKey = _configuration["GroqApiKey"];
-        Console.WriteLine("API Key: " + (string.IsNullOrEmpty(apiKey) ? "NULA" : "OK"));
         
 
         _httpClient.DefaultRequestHeaders.Authorization = 
@@ -54,16 +53,12 @@ Se alguma informação não estiver presente na mensagem, deixe o campo após os
             },
             response_format= new {type = "json_object"}
         };
-        Console.WriteLine("Request Body: " + JsonSerializer.Serialize(requestBody));
 
         var jsonContent = new StringContent(
             JsonSerializer.Serialize(requestBody), 
             Encoding.UTF8,
             "application/json"
         );
-
-        Console.WriteLine("Request Body: " + JsonSerializer.Serialize(requestBody));
-        Console.WriteLine("Auth Header: " + _httpClient.DefaultRequestHeaders.Authorization);
 
         var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", jsonContent);
 
@@ -80,6 +75,8 @@ Se alguma informação não estiver presente na mensagem, deixe o campo após os
             .GetProperty("message")
             .GetProperty("content")
             .GetString();
+
+        _logger.LogDebug("Processing comanda request");
 
         var resultadoJson = JsonSerializer.Deserialize<ComandaResponse>(resultadoText ?? throw new InvalidOperationException());
         return Ok(resultadoJson);
