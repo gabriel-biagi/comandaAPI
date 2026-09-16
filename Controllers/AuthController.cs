@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using RegisterRequest = comandaAPI.Models.DTOs.Request.RegisterRequest;
 using LoginRequest = comandaAPI.Models.DTOs.Request.LoginRequest;
+using Isopoh.Cryptography.Argon2; //hash
 
 namespace comandaAPI.Controllers;
 
@@ -29,7 +30,7 @@ public class AuthController : Controller
         _tokenService = tokenService;
         _configuration = configuration;
     }
-    
+
     [Authorize(Roles = "Admin")]
     [HttpPost]
     [Route("Register")]
@@ -46,7 +47,7 @@ public class AuthController : Controller
             UserName = request.UserName,
             SecurityStamp = Guid.NewGuid().ToString()
         };
-        
+
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
@@ -58,7 +59,7 @@ public class AuthController : Controller
         _logger.LogInformation(1, $"User {user.UserName} created successfully");
         return Ok(new RegisterResponse { Success = true, Message = "User created successfully!" });
     }
-    
+
     [HttpPost]
     [Route("Login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -91,34 +92,49 @@ public class AuthController : Controller
             var accessTokenString = new JwtSecurityTokenHandler().WriteToken(accessToken);
 
             Response.Cookies.Append(
-        "accessToken",
-        accessTokenString,
-        new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddMinutes(15)
-        }
+            "accessToken",
+            accessTokenString,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(15)
+            }
     );
 
-            var refreshToken = _tokenService.GenerateRefreshToken();
+            var refreshTokenString = _tokenService.GenerateRefreshToken();
+            var hashedToken = HashToken(refreshTokenString);
 
             _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
 
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays);
+            var refreshTokenEntity = new RefreshTokenEntity
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,  // ← Associa ao usuário
+                HashedToken = hashedToken,
+                ExpiresAt = DateTime.UtcNow.AddDays(refreshTokenValidityInDays),
+                CreatedAt = DateTime.UtcNow
+            };
 
-            await _userManager.UpdateAsync(user);
+            await _context.RefreshTokens.AddAsync(refreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            Response.Cookies.Append(
+             "refreshToken",
+            refreshTokenString,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays)
+            }
+                );
             return Ok(new LoginResponse
             {
                 Success = true,
-                Message = "Login successful",
-                Token = new TokenResponse
-                {
-                    AccessToken = accessTokenString,
-                    RefreshToken = refreshToken
-                }
+                Message = "Login successful"
             });
         }
         catch (Exception ex)
@@ -136,4 +152,15 @@ public class AuthController : Controller
         return Ok("Logged out successfully");
     }
 
+
+
+    private string HashToken(string token)
+    {
+        return Argon2.Hash(token);
+    }
+
+    private bool VerifyToken(string token, string hash)
+    {
+        return Argon2.Verify(hash, token);
+    }
 }

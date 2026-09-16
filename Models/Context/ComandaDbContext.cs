@@ -14,5 +14,10 @@ public class ComandaDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<RefreshTokenEntity>()
+        .HasOne(rt => rt.User)
+        .WithMany()
+        .HasForeignKey(rt => rt.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
     }
 }
