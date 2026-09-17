@@ -68,7 +68,9 @@ public class AuthController : ControllerBase
             Response.Cookies.Append("accessToken", accessTokenString, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = !HttpContext.RequestServices
+                .GetRequiredService<IWebHostEnvironment>()
+                .IsDevelopment(),
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddMinutes(15)
             });
@@ -91,7 +93,9 @@ public class AuthController : ControllerBase
             Response.Cookies.Append("refreshToken", refreshTokenString, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = !HttpContext.RequestServices
+                .GetRequiredService<IWebHostEnvironment>()
+                .IsDevelopment(),
                 SameSite = SameSiteMode.Strict,
                 Path = "/",
                 Expires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays)
@@ -168,7 +172,9 @@ public class AuthController : ControllerBase
         Response.Cookies.Append("accessToken", newAccessTokenString, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = !HttpContext.RequestServices
+            .GetRequiredService<IWebHostEnvironment>()
+            .IsDevelopment(),
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddMinutes(tokenValidityInMinutes)
         });
@@ -193,7 +199,9 @@ public class AuthController : ControllerBase
         Response.Cookies.Append("refreshToken", newRefreshTokenString, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = !HttpContext.RequestServices
+            .GetRequiredService<IWebHostEnvironment>()
+            .IsDevelopment(),
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays)
         });

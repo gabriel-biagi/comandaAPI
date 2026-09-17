@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5084';
+const API_URL = 'http://192.168.2.76:5084';
 
 // ========== FETCH COM AUTO-REFRESH ==========
 
@@ -457,11 +457,18 @@ function gerarComanda(comandaResponse) {
     dispararRawBT(texto);
 }
 
+function removerAcentos(texto) {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function dispararRawBT(comandaTexto) {
     try {
-        const bytes = new TextEncoder().encode(comandaTexto);
+        const textoLimpo = removerAcentos(comandaTexto);
+
+        const bytes = new TextEncoder().encode(textoLimpo);
         const base64 = btoa(String.fromCharCode(...bytes));
-        window.location.href = `rawbt://base64/${base64}`;
+
+        window.location.href = `rawbt:base64,${base64}`;
     } catch (erro) {
         console.error('Erro ao enviar para RawBT:', erro);
         showStatus("Erro ao enviar para o RawBT: " + erro.message, 'error', 'comandaStatus');
