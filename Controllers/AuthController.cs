@@ -50,8 +50,9 @@ public class AuthController : ControllerBase
 
             var authClaims = new List<Claim>
             {
-                new Claim(ClaimTypes.UserName, user.UserName!),
+                new Claim(ClaimTypes.Name, user.UserName!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
             
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -107,6 +108,9 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout()
     {
         var userId = _userManager.GetUserId(User);
+        if (userId is null)
+            return Unauthorized(new { error = "User not authenticated" });
+
         await _repo.RemoveByUserIdAsync(userId);
         Response.Cookies.Delete("accessToken");
         Response.Cookies.Delete("refreshToken");
@@ -118,7 +122,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> GetCurrentUser()
     {
         var user = await _userManager.FindByNameAsync(
-            User.FindFirst(ClaimTypes.UserName)?.Value);
+            User.FindFirst(ClaimTypes.Name)?.Value);
         if (user is null)
             return NotFound(new { error = "User not found" });
         return Ok(new { message = $"User is logged in {user.UserName}"});
@@ -140,8 +144,9 @@ public class AuthController : ControllerBase
 
         var authClaims = new List<Claim>
         {
-            new Claim(ClaimTypes.UserName, user.UserName!),
+            new Claim(ClaimTypes.Name, user.UserName!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id)
         };
 
         var userRoles = await _userManager.GetRolesAsync(user);
@@ -217,7 +222,7 @@ public class AuthController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        var userName = User.FindFirst(ClaimTypes.UserName)?.Value;
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
         var user = await _userManager.FindByNameAsync(userName);
 
         if (user == null)
