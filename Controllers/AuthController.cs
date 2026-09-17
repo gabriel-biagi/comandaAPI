@@ -54,7 +54,7 @@ public class AuthController : ControllerBase
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
-            
+
             var userRoles = await _userManager.GetRolesAsync(user);
             foreach (var userRole in userRoles)
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));
@@ -125,7 +125,7 @@ public class AuthController : ControllerBase
             User.FindFirst(ClaimTypes.Name)?.Value);
         if (user is null)
             return NotFound(new { error = "User not found" });
-        return Ok(new { message = $"User is logged in {user.UserName}"});
+        return Ok(new { message = $"User is logged in {user.UserName}" });
     }
 
     [HttpPost("refresh")]
@@ -213,7 +213,12 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
             return BadRequest(new RegisterResponse { Success = false, Message = string.Join(", ", result.Errors.Select(e => e.Description)) });
 
-        await _userManager.AddToRoleAsync(user, "Employee");
+        var userRole = await _userManager.AddToRoleAsync(user, "Employee");
+        if (!userRole.Succeeded)
+        {
+            await _userManager.DeleteAsync(user); // Rollback user creation if role assignment fails
+            return BadRequest(new RegisterResponse { Success = false, Message = string.Join(", ", userRole.Errors.Select(e => e.Description)) });
+        }
 
         return Ok(new RegisterResponse { Success = true, Message = "User created successfully" });
     }
