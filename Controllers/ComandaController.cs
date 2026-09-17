@@ -29,9 +29,9 @@ public class ComandaController : ControllerBase
     public async Task<IActionResult> ProcessarComanda([FromBody] ComandaRequest request)
     {
         string apiKey = _configuration["GroqApiKey"];
-        
 
-        _httpClient.DefaultRequestHeaders.Authorization = 
+
+        _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", apiKey);
 
         var requestBody = new
@@ -53,11 +53,11 @@ public class ComandaController : ControllerBase
 Se alguma informação não estiver presente na mensagem, deixe o campo após os dois pontos com o texto Não Informado." },
                 new { role = "user", content = request.Text }
             },
-            response_format= new {type = "json_object"}
+            response_format = new { type = "json_object" }
         };
 
         var jsonContent = new StringContent(
-            JsonSerializer.Serialize(requestBody), 
+            JsonSerializer.Serialize(requestBody),
             Encoding.UTF8,
             "application/json"
         );
@@ -66,11 +66,12 @@ Se alguma informação não estiver presente na mensagem, deixe o campo após os
 
         if (!response.IsSuccessStatusCode)
         {
+            _logger.LogError("Erro ao processar na API do Groq. Status Code: {StatusCode}, Reason: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
             return StatusCode((int)response.StatusCode, new { error = "Erro ao processar na API do Groq." });
         }
 
         string jsonResponse = await response.Content.ReadAsStringAsync();
-        
+
         using var doc = JsonDocument.Parse(jsonResponse);
         string resultadoText = doc.RootElement
             .GetProperty("choices")[0]
