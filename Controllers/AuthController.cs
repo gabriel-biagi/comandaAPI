@@ -42,7 +42,10 @@ public class AuthController : ControllerBase
         {
             var user = await _userManager.FindByNameAsync(request.Username);
             if (user is null)
+            {
+                _logger.LogWarning("Login attempt failed for non-existent user {Username}", request.Username);
                 return Unauthorized(new LoginResponse { Success = false, Message = "Invalid credentials" });
+            }
 
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
             if (!isPasswordValid)
@@ -94,6 +97,7 @@ public class AuthController : ControllerBase
                 Expires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays)
             });
 
+            _logger.LogInformation("User {Username} logged in successfully", request.Username);
             return Ok(new LoginResponse { Success = true, Message = "Login successful" });
         }
         catch (Exception ex)
@@ -109,11 +113,15 @@ public class AuthController : ControllerBase
     {
         var userId = _userManager.GetUserId(User);
         if (userId is null)
+        {
+            _logger.LogWarning("Logout attempt by unauthenticated user");
             return Unauthorized(new { error = "User not authenticated" });
+        }
 
         await _repo.RemoveByUserIdAsync(userId);
         Response.Cookies.Delete("accessToken");
         Response.Cookies.Delete("refreshToken");
+        _logger.LogInformation("User {UserId} logged out successfully", userId);
         return Ok("Logged out successfully");
     }
 
@@ -211,15 +219,20 @@ public class AuthController : ControllerBase
         var result = await _userManager.CreateAsync(user, request.Password);
 
         if (!result.Succeeded)
+        {
+            _logger.LogError("Failed to create user {UserName}: {Errors}", request.UserName, string.Join(", ", result.Errors.Select(e => e.Description)));
             return BadRequest(new RegisterResponse { Success = false, Message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+        }
 
         var userRole = await _userManager.AddToRoleAsync(user, "Employee");
         if (!userRole.Succeeded)
         {
             await _userManager.DeleteAsync(user); // Rollback user creation if role assignment fails
+            _logger.LogError("Failed to assign role to user {UserName}: {Errors}", request.UserName, string.Join(", ", userRole.Errors.Select(e => e.Description)));
             return BadRequest(new RegisterResponse { Success = false, Message = string.Join(", ", userRole.Errors.Select(e => e.Description)) });
         }
 
+        _logger.LogInformation("User {UserName} created successfully with role Employee", request.UserName);
         return Ok(new RegisterResponse { Success = true, Message = "User created successfully" });
     }
 
