@@ -30,7 +30,7 @@ public static class ApplicationException
                         (int)statusCode,
                         exception.Message,
                         context.TraceIdentifier,
-                        exception.StackTrace);
+                        null,
                     await context.Response.WriteAsync(errorDetails.ToString());
                 }
             });
