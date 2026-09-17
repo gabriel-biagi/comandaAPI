@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using comandaAPI.Middlewares;
+using comandaAPI.Infrastructure.Repositories;
+using comandaAPI.Domain.Exception;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ComandaDbContext>(options =>
     options.UseSqlite("Data Source=comanda.db"));
+
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ComandaDbContext>()

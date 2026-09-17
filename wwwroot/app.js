@@ -1,5 +1,27 @@
 const API_URL = 'http://localhost:5084';
 
+// ========== FETCH COM AUTO-REFRESH ==========
+
+async function fetchWithRefresh(url, options = {}) {
+    let response = await fetch(url, { ...options, credentials: 'include' });
+
+    if (response.status === 401) {
+        const refreshResponse = await fetch(API_URL + '/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (refreshResponse.ok) {
+            response = await fetch(url, { ...options, credentials: 'include' });
+        } else {
+            showLoginScreen();
+            return response;
+        }
+    }
+
+    return response;
+}
+
 // Elementos do Login
 const loginScreen = document.getElementById('loginScreen');
 const comandaScreen = document.getElementById('comandaScreen');
@@ -35,18 +57,6 @@ function showStatus(message, type = '', elementId = 'loginStatus') {
     }
 }
 
-function getToken() {
-    return localStorage.getItem('accessToken');
-}
-
-function clearToken() {
-    localStorage.removeItem('accessToken');
-}
-
-function isTokenValid() {
-    return !!getToken();
-}
-
 // ========== NAVEGAÇÃO ENTRE TELAS ==========
 
 function showLoginScreen() {
@@ -62,11 +72,23 @@ function showComandaScreen() {
 }
 
 // Verifica se usuário já está logado ao carregar a página
-window.addEventListener('load', () => {
-    if (isTokenValid()) {
+window.addEventListener('load', async () => {
+    try {
+        const response = await fetchWithRefresh(API_URL + '/api/auth/user-logged', {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            showLoginScreen()
+            showStatus('Usuário não está logado.', 'error', 'loginStatus');
+            return;
+        }
+
         showComandaScreen();
-    } else {
-        showLoginScreen();
+    } catch (err) {
+        console.error(err);
+        showStatus('Erro ao verificar status do usuário', 'error', 'loginStatus');
     }
 });
 
@@ -89,8 +111,7 @@ btnLogin.addEventListener('click', async () => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password }),
-            credentials: 'include'
+            body: JSON.stringify({ username, password })
         });
 
         const data = await response.json();
@@ -99,29 +120,34 @@ btnLogin.addEventListener('click', async () => {
             showStatus(data.message || 'Falha ao fazer login', 'error', 'loginStatus');
             return;
         }
-
-        if (data.token && data.token.accessToken) {
-            showStatus('Login realizado com sucesso!', 'success', 'loginStatus');
-            setTimeout(() => {
-                showComandaScreen();
-            }, 500);
-        } else {
-            showStatus('Erro ao obter token', 'error', 'loginStatus');
+        showStatus('Login realizado com sucesso!', 'success', 'loginStatus');
+        setTimeout(() => {
+            showComandaScreen();
+        }, 500);
+        } catch (err) {
+            console.error(err);
+            showStatus('Erro ao conectar ao servidor', 'error', 'loginStatus');
+        } finally {
+            btnLogin.disabled = false;
         }
-    } catch (err) {
-        console.error(err);
-        showStatus('Erro ao conectar ao servidor', 'error', 'loginStatus');
-    } finally {
-        btnLogin.disabled = false;
-    }
-});
+    });
 
 // ========== LOGOUT ==========
 
-btnLogout.addEventListener('click', () => {
-    clearToken();
-    showLoginScreen();
-    showStatus('Desconectado com sucesso', 'success', 'loginStatus');
+btnLogout.addEventListener('click', async () => {
+    try {
+        const response = await fetchWithRefresh(API_URL + '/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        if (response.ok) {
+            showLoginScreen();
+            showStatus('Desconectado com sucesso', 'success', 'loginStatus');
+        }
+    } catch (err) {
+        console.error(err);
+        showStatus('Erro ao desconectar', 'error', 'loginStatus');
+    }
 });
 
 // ========== COMANDA - COLAR ==========
@@ -144,7 +170,7 @@ btnColar.addEventListener('click', async () => {
 
 btnEnviar.addEventListener('click', async () => {
     const textValue = inputTexto.value.trim();
-    
+
     if (!textValue) {
         showStatus('Por favor, insira ou cole algum texto primeiro.', 'error', 'comandaStatus');
         inputTexto.focus();
@@ -158,27 +184,20 @@ btnEnviar.addEventListener('click', async () => {
     comandaStatus.textContent = '';
 
     try {
-        const response = await fetch(API_URL + '/api/comanda', {
+        const response = await fetchWithRefresh(API_URL + '/api/comanda', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ text: textValue }),
-            credentials: 'include'
+            body: JSON.stringify({ text: textValue })
         });
 
         if (!response.ok) {
-            if (response.status === 401) {
-                showStatus('Token expirado. Faça login novamente.', 'error', 'comandaStatus');
-                clearToken();
-                showLoginScreen();
-                return;
-            }
             throw new Error(`Erro no servidor: ${response.status}`);
         }
 
         const data = await response.json();
-        
+
         // Tratando o retorno
         if (typeof data === 'string') {
             outputTexto.value = data;
