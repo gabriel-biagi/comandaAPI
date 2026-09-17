@@ -104,8 +104,11 @@ public class AuthController : ControllerBase
 
     [HttpPost("logout")]
     [Authorize]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
+        var refreshTokenEntity = await _repo.GetByUserIdAsync(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        await _repo.RemoveAsync(refreshTokenEntity);
+        await _repo.SaveChangesAsync();
         Response.Cookies.Delete("accessToken");
         Response.Cookies.Delete("refreshToken");
         return Ok("Logged out successfully");
