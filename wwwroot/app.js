@@ -41,6 +41,21 @@ const spinner = document.getElementById('spinner');
 const btnEnviarText = btnEnviar.querySelector('.btn-text');
 const comandaStatus = document.getElementById('comandaStatus');
 
+// Elementos da Modal
+const reviewModal = document.getElementById('reviewModal');
+const btnCloseModal = document.getElementById('btnCloseModal');
+const btnCancelarModal = document.getElementById('btnCancelarModal');
+const btnConfirmarComanda = document.getElementById('btnConfirmarComanda');
+const btnAdicionarPedido = document.getElementById('btnAdicionarPedido');
+const pedidosList = document.getElementById('pedidosList');
+const editNome = document.getElementById('editNome');
+const editValor = document.getElementById('editValor');
+const editFormaPagamento = document.getElementById('editFormaPagamento');
+const editEndereco = document.getElementById('editEndereco');
+
+// Variável global pra armazenar comanda atual
+let comandaAtual = null;
+
 // ========== FUNÇÕES UTILITÁRIAS ==========
 
 function showStatus(message, type = '', elementId = 'loginStatus') {
@@ -198,12 +213,10 @@ btnEnviar.addEventListener('click', async () => {
 
         const data = await response.json();
 
-        // Tratando o retorno
-        if (typeof data === 'string') {
-            outputTexto.value = data;
-        } else if (data) {
-            outputTexto.value = JSON.stringify(data, null, 2);
-        }
+        // Armazena a comanda e abre modal
+        comandaAtual = data;
+        preencherModal(data);
+        abrirModal();
 
         showStatus('Processado com sucesso!', 'success', 'comandaStatus');
     } catch (err) {
@@ -217,23 +230,240 @@ btnEnviar.addEventListener('click', async () => {
     }
 });
 
-// ========== COMANDA - COPIAR ==========
+// ========== MODAL - ABRIR/FECHAR ==========
 
-btnCopiar.addEventListener('click', async () => {
-    const outputValue = outputTexto.value;
+function abrirModal() {
+    reviewModal.classList.add('active');
+}
 
-    if (!outputValue) {
-        showStatus('Não há conteúdo para copiar.', 'error', 'comandaStatus');
+function fecharModal() {
+    reviewModal.classList.remove('active');
+    comandaAtual = null;
+}
+
+btnCloseModal.addEventListener('click', fecharModal);
+btnCancelarModal.addEventListener('click', fecharModal);
+
+// Fechar modal ao clicar fora
+reviewModal.addEventListener('click', (e) => {
+    if (e.target === reviewModal) {
+        fecharModal();
+    }
+});
+
+// ========== MODAL - PREENCHER ==========
+
+function preencherModal(comanda) {
+    editNome.value = comanda.nome || '';
+    editValor.value = comanda.valor || '';
+    editFormaPagamento.value = comanda.formaDePagamento || '';
+    editEndereco.value = comanda.endereço || '';
+
+    pedidosList.innerHTML = '';
+    
+    if (comanda.pedidos && comanda.pedidos.length > 0) {
+        comanda.pedidos.forEach((pedido, index) => {
+            adicionarPedidoCard(pedido, index);
+        });
+    }
+}
+
+function adicionarPedidoCard(pedido = null, index = null) {
+    const id = index !== null ? index : Date.now();
+    const pedidoCard = document.createElement('div');
+    pedidoCard.className = 'pedido-card';
+    pedidoCard.id = `pedido-${id}`;
+
+    const item = pedido?.item || '';
+    const tamanho = pedido?.tamanho || '';
+    const acompanhamentos = pedido?.acompanhamentos || [];
+
+    pedidoCard.innerHTML = `
+        <div class="pedido-header">
+            <h3>Pedido ${index !== null ? index + 1 : ''}</h3>
+            <button type="button" class="btn-remover-pedido" onclick="removerPedido(${id})">Remover</button>
+        </div>
+
+        <div class="input-group">
+            <label>Item</label>
+            <input type="text" class="pedido-item" value="${item}" placeholder="Ex: Marmita, Copo">
+        </div>
+
+        <div class="input-group">
+            <label>Tamanho</label>
+            <input type="text" class="pedido-tamanho" value="${tamanho}" placeholder="Ex: dupla, grande">
+        </div>
+
+        <div class="input-group">
+            <label>Acompanhamentos</label>
+            <div class="acompanhamentos-list" id="acompanhamentos-${id}">
+                ${acompanhamentos.map((acomp, i) => `
+                    <div class="acompanhamento-item">
+                        <input type="text" value="${acomp}" placeholder="Acompanhamento">
+                        <button type="button" class="btn-remover-acompanhamento" onclick="removerAcompanhamento(${id}, ${i})">-</button>
+                    </div>
+                `).join('')}
+            </div>
+            <button type="button" class="btn-adicionar-acompanhamento" onclick="adicionarAcompanhamento(${id})">+ Adicionar Acompanhamento</button>
+        </div>
+    `;
+
+    pedidosList.appendChild(pedidoCard);
+}
+
+function removerPedido(id) {
+    const card = document.getElementById(`pedido-${id}`);
+    if (card) card.remove();
+}
+
+function adicionarAcompanhamento(pedidoId) {
+    const acompList = document.getElementById(`acompanhamentos-${pedidoId}`);
+    const acompItem = document.createElement('div');
+    acompItem.className = 'acompanhamento-item';
+    acompItem.innerHTML = `
+        <input type="text" placeholder="Novo acompanhamento">
+        <button type="button" class="btn-remover-acompanhamento" onclick="this.parentElement.remove()">-</button>
+    `;
+    acompList.appendChild(acompItem);
+}
+
+function removerAcompanhamento(pedidoId, index) {
+    const acompList = document.getElementById(`acompanhamentos-${pedidoId}`);
+    const items = acompList.querySelectorAll('.acompanhamento-item');
+    if (items[index]) items[index].remove();
+}
+
+btnAdicionarPedido.addEventListener('click', () => {
+    adicionarPedidoCard();
+});
+
+// ========== MODAL - CONFIRMAR ==========
+
+btnConfirmarComanda.addEventListener('click', () => {
+    const comandaEditada = coletarDadosModal();
+    
+    if (!comandaEditada) {
+        showStatus('Preencha os dados obrigatórios da comanda.', 'error', 'comandaStatus');
         return;
     }
 
-    try {
-        await navigator.clipboard.writeText(outputValue);
-        showStatus('Resultado copiado para a área de transferência!', 'success', 'comandaStatus');
-    } catch (err) {
-        console.error(err);
-        outputTexto.select();
-        document.execCommand('copy');
-        showStatus('Resultado copiado!', 'success', 'comandaStatus');
-    }
+    fecharModal();
+    gerarComanda(comandaEditada);
+    showStatus('Comanda enviada para impressão!', 'success', 'comandaStatus');
 });
+
+function coletarDadosModal() {
+    const nome = editNome.value.trim();
+    const valor = editValor.value.trim();
+    const formaDePagamento = editFormaPagamento.value.trim();
+    const endereco = editEndereco.value.trim();
+
+    if (!nome || !valor || !formaDePagamento) {
+        return null;
+    }
+
+    const pedidos = [];
+    document.querySelectorAll('.pedido-card').forEach(card => {
+        const item = card.querySelector('.pedido-item').value.trim();
+        const tamanho = card.querySelector('.pedido-tamanho').value.trim();
+        const acompanhamentos = Array.from(card.querySelectorAll('.acompanhamento-item input'))
+            .map(input => input.value.trim())
+            .filter(val => val);
+
+        if (item) {
+            pedidos.push({
+                item,
+                tamanho: tamanho || 'Não Informado',
+                acompanhamentos
+            });
+        }
+    });
+
+    if (pedidos.length === 0) {
+        return null;
+    }
+
+    return {
+        nome,
+        pedidos,
+        valor,
+        formaDePagamento,
+        endereço: endereco || 'Não Informado'
+    };
+}
+
+// ========== GERAR COMANDA (ESC/POS) ==========
+
+function gerarComanda(comandaResponse) {
+    let texto = "";
+   
+    // Cabeçalho fixo (32 caracteres)
+    texto += "================================\n";
+    texto += "        PEDIDO / COMANDA        \n";
+    texto += "================================\n";
+    texto += `Cliente: ${comandaResponse.nome}\n`;
+    texto += "--------------------------------\n";
+
+    // Loop para processar os pedidos
+    comandaResponse.pedidos.forEach((pedido, index) => {
+        // Monta o item com tamanho
+        const itemComTamanho = pedido.tamanho && pedido.tamanho !== "Não Informado" 
+            ? `${pedido.item} (${pedido.tamanho})`
+            : pedido.item;
+        
+        // Corta se for muito comprido
+        const itemCortado = itemComTamanho.substring(0, 32);
+        texto += `${itemCortado}\n`;
+
+        // Adiciona acompanhamentos, se houver
+        if (pedido.acompanhamentos && pedido.acompanhamentos.length > 0) {
+            pedido.acompanhamentos.forEach(acompanhamento => {
+                const acompCortado = `  - ${acompanhamento}`.substring(0, 32);
+                texto += `${acompCortado}\n`;
+            });
+        }
+
+        // Linha separadora entre pedidos (exceto no último)
+        if (index < comandaResponse.pedidos.length - 1) {
+            texto += "--------------------------------\n";
+        }
+    });
+
+    // Rodapé com informações adicionais
+    texto += "--------------------------------\n";
+    
+    // Valor
+    const textoValor = "TOTAL:";
+    const valorFormatado = `R$ ${comandaResponse.valor}`;
+    const espacosValor = " ".repeat(Math.max(1, 32 - textoValor.length - valorFormatado.length));
+    texto += `${textoValor}${espacosValor}${valorFormatado}\n`;
+
+    // Forma de pagamento
+    texto += `Pagamento: ${comandaResponse.formaDePagamento}\n`;
+
+    // Endereço
+    texto += "--------------------------------\n";
+    texto += "Endereço:\n";
+    // Quebra endereço em linhas de até 32 caracteres
+    const endereco = comandaResponse.endereço;
+    for (let i = 0; i < endereco.length; i += 32) {
+        texto += endereco.substring(i, i + 32) + "\n";
+    }
+
+    texto += "================================\n";
+    texto += "\n\n\n"; // Espaço para corte do papel
+
+    console.log("Comanda gerada:\n" + texto);
+    dispararRawBT(texto);
+}
+
+function dispararRawBT(comandaTexto) {
+    try {
+        const bytes = new TextEncoder().encode(comandaTexto);
+        const base64 = btoa(String.fromCharCode(...bytes));
+        window.location.href = `rawbt://base64/${base64}`;
+    } catch (erro) {
+        console.error('Erro ao enviar para RawBT:', erro);
+        showStatus("Erro ao enviar para o RawBT: " + erro.message, 'error', 'comandaStatus');
+    }
+}

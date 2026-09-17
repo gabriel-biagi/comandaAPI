@@ -195,6 +195,160 @@ button.secondary:hover {
     to { transform: rotate(360deg); }
 }
 
+/* ========== MODAL ==========*/
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.75rem;
+    cursor: pointer;
+    padding: 0;
+    width: auto;
+    height: auto;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-footer button {
+    flex: 1;
+}
+
+/* Pedido Card */
+.pedido-card {
+    background-color: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+}
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pedido-header h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.btn-remover-pedido {
+    background-color: var(--error-color);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.btn-remover-pedido:hover {
+    background-color: #dc2626;
+}
+
+.acompanhamentos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.acompanhamento-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.acompanhamento-item input {
+    flex: 1;
+}
+
+.btn-remover-acompanhamento {
+    background-color: var(--error-color);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.btn-remover-acompanhamento:hover {
+    background-color: #dc2626;
+}
+
+.btn-adicionar-acompanhamento {
+    background-color: rgba(34, 197, 94, 0.2);
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+    padding: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.btn-adicionar-acompanhamento:hover {
+    background-color: rgba(34, 197, 94, 0.3);
+}
+
+.small {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
 @media (max-width: 480px) {
     .container {
         padding: 1.25rem;

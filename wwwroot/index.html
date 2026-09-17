@@ -62,6 +62,54 @@
         </div>
     </div>
 
+    <!-- Modal de Revisão/Edição -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Revisar Comanda</h2>
+                <button type="button" id="btnCloseModal" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Cliente -->
+                <div class="input-group">
+                    <label for="editNome">Cliente</label>
+                    <input type="text" id="editNome" placeholder="Nome do cliente">
+                </div>
+
+                <!-- Pedidos -->
+                <div class="input-group">
+                    <label>Pedidos</label>
+                    <div id="pedidosList"></div>
+                    <button type="button" id="btnAdicionarPedido" class="secondary small">+ Adicionar Pedido</button>
+                </div>
+
+                <!-- Valor -->
+                <div class="input-group">
+                    <label for="editValor">Valor Total</label>
+                    <input type="text" id="editValor" placeholder="Ex: 65,00">
+                </div>
+
+                <!-- Forma de Pagamento -->
+                <div class="input-group">
+                    <label for="editFormaPagamento">Forma de Pagamento</label>
+                    <input type="text" id="editFormaPagamento" placeholder="Ex: pix, dinheiro, cartão">
+                </div>
+
+                <!-- Endereço -->
+                <div class="input-group">
+                    <label for="editEndereco">Endereço</label>
+                    <textarea id="editEndereco" placeholder="Rua, número, bairro, complemento..." style="height: 80px;"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="btnCancelarModal" class="secondary">Cancelar</button>
+                <button type="button" id="btnConfirmarComanda" class="primary">Confirmar e Imprimir</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
