@@ -89,6 +89,7 @@ public class AuthController : ControllerBase
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
+                Path = "/",
                 Expires = DateTime.UtcNow.AddDays(refreshTokenValidityInDays)
             });
 
