@@ -8,4 +8,5 @@ public interface IRefreshTokenRepository
     Task AddAsync(RefreshTokenEntity entity);
     Task RemoveAsync(RefreshTokenEntity entity);
     Task SaveChangesAsync();
+    Task RemoveByUserIdAsync(string userId);
 }

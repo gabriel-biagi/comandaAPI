@@ -33,4 +33,15 @@ public class RefreshTokenRepository : IRefreshTokenRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task RemoveByUserIdAsync(string userId)
+    {
+        var rt = await _context.RefreshTokens
+        .FirstOrDefaultAsync(rt => rt.UserId == userId);
+        if (rt != null)
+        {
+            _context.RefreshTokens.Remove(rt);
+            await SaveChangesAsync();
+        }
+    }
 }
