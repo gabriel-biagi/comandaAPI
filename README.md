@@ -1,13 +1,16 @@
 # ComandaAPI
 
 API para processamento e estruturação de pedidos recebidos em mensagens de WhatsApp, utilizando inteligência artificial para transformar mensagens em dados organizados.
-
 O projeto foi desenvolvido para uma situação real de uso em uma açaiteria, com o objetivo de reduzir a necessidade de interpretar e organizar manualmente as mensagens de pedidos.
+
+## Justificativa do Projeto
+
+A criação manual de comandas é uma tarefa que consome tempo significativo da equipe, interferindo na eficiência e produtividade operacional. Ao receber pedidos via WhatsApp, funcionários precisam interpretar mensagens desorganizadas, extrair informações relevantes e estruturar tudo manualmente para posterior impressão.
+Com a ComandaAPI, esse processo é automatizado: a inteligência artificial extrai e estrutura os dados em tempo real, permitindo que o tempo antes despendido com organização manual seja redirecionado para atividades de maior valor agregado, acelerando significativamente o fluxo de processamento de pedidos.
 
 ## Sobre o projeto
 
 Mensagens de pedidos recebidas pelo WhatsApp podem apresentar informações desorganizadas, abreviações e diferentes formas de descrever o mesmo pedido.
-
 A ComandaAPI recebe o texto da mensagem, envia o conteúdo para a API da Groq com instruções específicas de processamento e retorna os dados estruturados em JSON.
 
 ### Fluxo
@@ -15,9 +18,9 @@ A ComandaAPI recebe o texto da mensagem, envia o conteúdo para a API da Groq co
 ```text
 Mensagem do WhatsApp
         ↓
-Frontend
+Frontend (Login)
         ↓
-ASP.NET Core Web API
+ASP.NET Core Web API (JWT + Refresh Token)
         ↓
 ComandaController
         ↓
@@ -25,7 +28,9 @@ Groq Cloud API
         ↓
 JSON estruturado
         ↓
-Frontend
+Modal de Revisão/Edição
+        ↓
+ESC/POS + RawBT (Impressora Térmica)
 ```
 
 ## Funcionalidades
@@ -34,15 +39,22 @@ Frontend
 - Extração de informações relevantes do pedido utilizando IA
 - Estruturação da resposta em JSON
 - Integração com a Groq Cloud API
-- Autenticação de usuários
-- Autorização utilizando JWT
+- **Autenticação com JWT e Refresh Token** (Access Token 15min, Refresh Token 7 dias)
+- **Auto-renovação de tokens** via refresh automático
 - ASP.NET Core Identity para gerenciamento de usuários
-- Autenticação utilizando cookies HttpOnly
+- Autenticação utilizando cookies HttpOnly, com `Secure` habilitado fora do ambiente de desenvolvimento
+- **Modal de revisão e edição** de pedidos antes da impressão
+- **Edição completa** de cliente, itens, tamanhos, acompanhamentos, valor, forma de pagamento e endereço
+- Adição e remoção dinâmica de pedidos e acompanhamentos
+- **Geração de comanda em formato ESC/POS** (80mm de largura)
+- **Integração com RawBT** para impressoras Bluetooth
+- Remoção automática de acentos para compatibilidade com impressoras térmicas
 - Tratamento global de exceções
 - Documentação da API com Swagger/OpenAPI
-- Interface web integrada à aplicação
+- Interface web responsiva integrada à aplicação
 - Validação do conteúdo processado
-- Comunicação assíncrona com a API externa
+- Comunicação assíncrona com APIs externas
+- **Impressão térmica validada em ambiente real** utilizando RawBT e impressora Bluetooth
 
 ## Tecnologias
 
@@ -103,19 +115,33 @@ A aplicação utiliza:
 
 ## Autenticação
 
-A API possui autenticação utilizando **ASP.NET Core Identity e JWT**.
+A API possui autenticação utilizando **ASP.NET Core Identity e JWT com Refresh Token**.
 
-O fluxo de autenticação utiliza cookies `HttpOnly` para armazenar o token de acesso, evitando que o token seja diretamente acessível por JavaScript no navegador.
+### Fluxo de Tokens
 
-Endpoints relacionados à autenticação incluem operações de:
+- **Access Token:** 15 minutos de validade, armazenado em cookie HttpOnly
+- **Refresh Token:** 7 dias de validade, armazenado em cookie HttpOnly e persistido no banco de dados
+- **Renovação Automática:** Frontend detecta 401 (token expirado) e chama `/api/auth/refresh` automaticamente
+- **Rotação:** O Refresh Token utilizado é removido e um novo é gerado.
 
-- Registro
-- Login
-- Logout
-- Renovação de autenticação
-- Gerenciamento de usuários
+### Claims do JWT
 
-Os endpoints protegidos utilizam autorização baseada em `[Authorize]`.
+O Access Token inclui:
+- `ClaimTypes.Name` — username do usuário
+- `ClaimTypes.NameIdentifier` — ID único do usuário (necessário para `GetUserId()`)
+- `ClaimTypes.Role` — papel/role do usuário
+- `JwtRegisteredClaimNames.Jti` — token ID único
+
+### Endpoints de Autenticação
+
+- `POST /api/auth/login` — Autentica o usuário e define os tokens em cookies HttpOnly
+- `POST /api/auth/logout` — Invalida tokens e deleta cookies
+- `POST /api/auth/refresh` — Renova Access Token e Refresh Token
+- `GET /api/auth/user-logged` — Retorna informações do usuário autenticado
+- `POST /api/auth/register` — Cria novo usuário (Admin only)
+- `POST /api/auth/change-password` — Altera senha do usuário (Admin only)
+
+Os endpoints protegidos utilizam `[Authorize]` para validar tokens.
 
 ## Processamento de pedidos
 
@@ -127,38 +153,61 @@ A requisição enviada à Groq define instruções para que a resposta siga uma 
 
 O resultado é convertido para o modelo de resposta da aplicação antes de ser retornado pela API.
 
-### Exemplo conceitual
-
-Entrada:
-
-```text
-Mensagem contendo as informações do pedido enviadas pelo cliente.
-```
-
-Processamento:
+### Fluxo de Processamento
 
 ```text
 Texto recebido
     ↓
-Prompt de processamento
+Prompt de processamento (Groq)
     ↓
 Groq Cloud API
     ↓
-Resposta JSON
+Resposta JSON (Nome, Pedidos[], Valor, Forma de Pagamento, Endereço)
     ↓
-Desserialização
+Desserialização → ComandaResponse
     ↓
-ComandaResponse
+Frontend abre Modal de Revisão
+    ↓
+Usuário edita/confirma dados
+    ↓
+Geração ESC/POS
+    ↓
+Envio via RawBT → Impressora Térmica
 ```
 
-A resposta estruturada contém informações relacionadas ao pedido, como:
+### Estrutura da Resposta
 
-- Nome
-- Pedido
-- Acompanhamentos
-- Valor
-- Forma de pagamento
-- Endereço
+A resposta estruturada contém:
+
+```json
+{
+  "nome": "Nome do Cliente",
+  "pedidos": [
+    {
+      "item": "Marmita",
+      "tamanho": "dupla",
+      "acompanhamentos": ["Paçoca", "Chocolate"]
+    }
+  ],
+  "valor": "55,00",
+  "formaDePagamento": "pix",
+  "endereço": "Rua..., Número..., Bairro..."
+}
+```
+
+### Modal de Revisão
+
+Após receber a resposta da IA, uma modal permite:
+
+- Editar nome do cliente
+- Adicionar/remover pedidos
+- Editar item e tamanho de cada pedido
+- Adicionar/remover acompanhamentos por pedido
+- Alterar valor total
+- Modificar forma de pagamento
+- Editar endereço de entrega
+
+Todas as alterações são feitas em tempo real antes de confirmar a impressão.
 
 ## Frontend
 
@@ -171,15 +220,69 @@ wwwroot/
 └── app.js
 ```
 
-O JavaScript realiza a comunicação com a API utilizando `fetch`.
+### Arquitetura
 
-A interface permite realizar o processamento da mensagem e apresentar o resultado estruturado retornado pela API.
+- **Tela de Login:** Autenticação com JWT e Refresh Token
+- **Tela de Comanda:** Entrada de texto e processamento
+- **Modal de Revisão:** Edição completa de dados antes de imprimir
+
+### Comunicação
+
+O JavaScript realiza a comunicação com a API utilizando `fetch` com suporte a:
+
+- Auto-renovação de tokens (detecta 401 e chama `/api/auth/refresh`)
+- Cookies HttpOnly (tokens enviados automaticamente)
+- Requisições autenticadas com `credentials: 'include'`
+
+### Geração de Comanda (ESC/POS)
+
+A aplicação gera comandas formatadas para impressoras térmicas de 80mm:
+
+- Cabeçalho e rodapé com bordas decorativas
+- Dados estruturados (cliente, itens, acompanhamentos, total, pagamento, endereço)
+- Remoção automática de acentos para compatibilidade
+- Codificação em base64 para transmissão via RawBT
+- Protocolo `rawbt:base64,{dados}` para integração com impressoras Bluetooth
+
+### Suporte a Dispositivos Móveis
+
+A interface é responsiva e funciona em:
+
+- Navegadores desktop
+- Navegadores mobile (iOS/Android)
+- Acesso via IP local na rede (ex: `http://192.168.x.x:5084`)
+- Integração com aplicativos de impressão Bluetooth (RawBT)
 
 ## Banco de dados
 
 O projeto utiliza **SQLite** junto ao Entity Framework Core.
 
-O banco é utilizado principalmente para os recursos relacionados ao ASP.NET Core Identity.
+### Tabelas Principais
+
+- `AspNetUsers` — Usuários do sistema (Identity)
+- `AspNetRoles` — Papéis/roles (Identity)
+- `AspNetUserRoles` — Associação usuário-role (Identity)
+- `RefreshTokens` — Refresh tokens persistidos com relação a usuário (cascade delete)
+
+### Refresh Token Persistence
+
+Cada Refresh Token é armazenado como:
+
+```csharp
+public class RefreshTokenEntity
+{
+    public Guid Id { get; set; }
+    public string UserId { get; set; }  // FK → AspNetUsers
+    public ApplicationUser User { get; set; }
+    public string HashedToken { get; set; }  // Token em plaintext
+    public DateTime ExpiresAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+```
+
+- **HashedToken:** Atualmente armazenado em plaintext. A implementação de hash dos refresh tokens está prevista como melhoria de segurança.
+- **Relação:** Um usuário pode possuir múltiplos refresh tokens.
+- **Revogação:** O refresh token utilizado é removido após a renovação.
 
 As alterações do modelo são controladas através de migrations do Entity Framework Core.
 
@@ -195,26 +298,13 @@ Exceções específicas da aplicação são utilizadas para representar diferent
 
 O middleware transforma essas exceções em respostas HTTP apropriadas para a API.
 
-## Configuração
-
-A chave utilizada para comunicação com a Groq Cloud API não deve ser armazenada diretamente no código-fonte.
-
-Em ambiente de desenvolvimento, o projeto utiliza **ASP.NET Core User Secrets** para armazenar configurações sensíveis.
-
-Exemplo:
-
-```bash
-dotnet user-secrets set "GroqApiKey" "SUA_CHAVE"
-```
-
-Depois de configurar a chave, a aplicação pode ser executada normalmente.
-
 ## Como executar
 
 ### Pré-requisitos
 
 - .NET 8 SDK
 - Uma chave da Groq Cloud API
+- (Opcional) Impressora Bluetooth com suporte a ESC/POS e app RawBT instalado
 
 ### 1. Clone o repositório
 
@@ -223,19 +313,36 @@ git clone https://github.com/gabriel-biagi/comandaAPI.git
 cd comandaAPI
 ```
 
-### 2. Configure a chave da Groq
+### 2. Configure as variáveis de ambiente
 
 ```bash
-dotnet user-secrets set "GroqApiKey" "SUA_CHAVE"
+# Configurar chave Groq
+dotnet user-secrets set "GroqApiKey" "SUA_CHAVE_GROQ"
+
+# Configurar chave JWT (se não estiver definida)
+dotnet user-secrets set "JWT:SecretKey" "uma_chave_segura_de_pelo_menos_32_caracteres"
 ```
 
 ### 3. Execute a aplicação
 
 ```bash
+# Desenvolvimento (HTTP)
+dotnet run --launch-profile http
+
+# Execução com HTTPS
 dotnet run
 ```
 
-A aplicação iniciará utilizando as configurações definidas no projeto.
+### 4. Acesse a aplicação
+
+- **Localhost:** `http://localhost:5084`
+- **Rede Local:** `http://{seu_ip}:5084` (mesmo WiFi)
+
+### 5. Login
+
+Utilize as credenciais de um usuário previamente cadastrado.
+
+> Para fins de demonstração, configure um usuário Admin localmente antes de acessar a aplicação.
 
 ## Swagger
 
@@ -245,6 +352,7 @@ Após iniciar a aplicação, a interface do Swagger pode ser acessada pela URL d
 
 ## Objetivo do projeto
 
+O projeto foi desenvolvido para uma situação real de uso em uma açaiteria e validado em ambiente real, incluindo o processamento, revisão e impressão das comandas.
 O projeto foi desenvolvido como uma aplicação prática para resolver um problema de processamento de pedidos e, ao mesmo tempo, aprofundar conhecimentos em:
 
 - ASP.NET Core
@@ -261,6 +369,27 @@ O projeto foi desenvolvido como uma aplicação prática para resolver um proble
 
 ## Status
 
-Em desenvolvimento.
+**MVP funcional** — Sistema validado em ambiente real para processamento,
+revisão e impressão de comandas.
 
-A aplicação possui o fluxo de processamento de pedidos e autenticação implementados. Novas funcionalidades podem ser adicionadas conforme a evolução do projeto.
+### Recursos Implementados ✅
+
+- Autenticação e autorização (JWT + Refresh Token)
+- Processamento de pedidos via Groq AI
+- Modal de revisão e edição de dados
+- Geração de comanda em ESC/POS
+- Integração com impressoras Bluetooth (RawBT)
+- Tratamento global de exceções
+- Suporte a acesso mobile via rede local
+- Validação de dados de entrada
+- Renovação automática de tokens
+
+### Roadmap Futuro
+
+- [ ] Rate limiting por IP/usuário
+- [ ] Auditoria de logins e operações sensíveis
+- [ ] Histórico de comandas processadas
+- [ ] Webhook para confirmação de impressão
+- [ ] Refinamento de prompts Groq
+- [ ] Dashboard de relatórios
+- [ ] Suporte a múltiplos níveis de permissão
