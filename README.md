@@ -6,6 +6,8 @@ O projeto nasceu de uma necessidade real em uma açaiteria: reduzir o trabalho m
 
 > **MVP funcional e validado em ambiente real**, incluindo processamento, revisão e impressão térmica.
 
+**Open-source • MIT License**
+
 ---
 
 ## Como funciona
@@ -41,7 +43,7 @@ A IA atua como **extratora de informações**. O resultado passa por uma etapa d
 - Processamento de mensagens de pedidos com IA
 - Extração de cliente, pedidos, tamanhos, acompanhamentos, valor, pagamento e endereço
 - Resposta estruturada em JSON
-- Modal para revisão e edição antes da impressão
+- Revisão e edição da comanda antes da impressão
 - Adição e remoção de pedidos e acompanhamentos
 - Geração de comandas em **ESC/POS para impressoras de 80mm**
 - Impressão Bluetooth através do **RawBT**
@@ -50,7 +52,7 @@ A IA atua como **extratora de informações**. O resultado passa por uma etapa d
 - Access Token e Refresh Token em **cookies HttpOnly**
 - Renovação automática e rotação de Refresh Tokens
 - Persistência de Refresh Tokens com Entity Framework Core
-- Bootstrap automático do usuário e role Admin
+- Bootstrap automático do usuário e role `Admin`
 - Tratamento global de exceções
 - Tratamento específico para falhas de serviços externos
 - Logs estruturados para investigação de erros da Groq
@@ -132,8 +134,9 @@ Responsáveis pela camada HTTP e entrada das requisições.
 
 **Services**
 
-Concentram regras e casos de uso da aplicação.  
-Por exemplo, `ComandaService` encapsula a integração com a Groq, deixando o `ComandaController` responsável apenas por receber a requisição e delegar o processamento.
+Concentram regras e casos de uso da aplicação.
+
+Por exemplo, `ComandaService` encapsula a integração com a Groq, deixando o `ComandaController` responsável por receber a requisição e delegar o processamento.
 
 **Repositories**
 
@@ -159,7 +162,7 @@ O endpoint de comandas recebe o texto original:
 }
 ```
 
-O `ComandaService` envia o conteúdo para a Groq com um prompt estruturado e transforma a resposta em um `ComandaResponse`.
+O `ComandaService` envia o conteúdo para a Groq utilizando um prompt estruturado e transforma a resposta em um `ComandaResponse`.
 
 Exemplo:
 
@@ -182,7 +185,7 @@ Exemplo:
 }
 ```
 
-O resultado não é enviado diretamente para impressão. O frontend apresenta os dados para **revisão e edição**, reduzindo o risco de uma interpretação incorreta da mensagem gerar uma comanda errada.
+O resultado não é enviado diretamente para impressão. O frontend apresenta os dados para **revisão e edição**, permitindo que o operador corrija ou complemente as informações antes da geração da comanda.
 
 ---
 
@@ -301,7 +304,7 @@ POST /api/auth/change-password
 POST /api/comanda
 ```
 
-O endpoint de processamento exige autenticação.
+O endpoint de processamento de comandas exige autenticação.
 
 ---
 
@@ -309,8 +312,8 @@ O endpoint de processamento exige autenticação.
 
 ### Pré-requisitos
 
-- .NET 8 SDK
-- Chave da Groq Cloud API
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Chave da [Groq Cloud API](https://console.groq.com/)
 - Opcional: RawBT + impressora Bluetooth ESC/POS
 
 ### Configuração
@@ -324,13 +327,15 @@ dotnet user-secrets set "Admin:Username" "SEU_ADMIN"
 dotnet user-secrets set "Admin:Password" "SUA_SENHA"
 ```
 
+> **Nunca adicione chaves de API, senhas, tokens ou outros secrets diretamente ao repositório.**
+
 ### Executar
 
 ```bash
 dotnet run --launch-profile http
 ```
 
-Em desenvolvimento, a aplicação pode ser acessada localmente ou através do IP da máquina na rede local para testes em dispositivos móveis.
+Durante o desenvolvimento, a aplicação pode ser acessada localmente ou através do IP da máquina na rede local para testes em dispositivos móveis.
 
 O Swagger fica disponível durante o desenvolvimento.
 
@@ -362,16 +367,22 @@ O Swagger fica disponível durante o desenvolvimento.
 
 - [ ] Hash dos Refresh Tokens armazenados
 - [ ] Rate limiting
-- [ ] Auditoria de operações sensíveis
 - [ ] Histórico de comandas
-- [ ] Dashboard e relatórios
 - [ ] Refinamento dos prompts e validação da resposta da IA
+
+---
+
+## Licença
+
+Este projeto está licenciado sob a **MIT License**.
+
+Consulte o arquivo [`LICENSE`](./LICENSE) para obter os termos completos da licença.
 
 ---
 
 ## Objetivo
 
-Além de resolver um problema operacional real, o projeto foi desenvolvido para aplicar conceitos de **engenharia de software e desenvolvimento backend**, incluindo:
+O projeto foi desenvolvido para resolver um problema operacional real e, ao mesmo tempo, aplicar conceitos de engenharia de software e desenvolvimento backend, incluindo:
 
 - APIs REST
 - Separação de responsabilidades
