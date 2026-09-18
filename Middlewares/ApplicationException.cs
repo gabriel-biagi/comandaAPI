@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using comandaAPI.Middlewares;
 using comandaAPI.Domain.Exception;
 using Microsoft.AspNetCore.Diagnostics;
@@ -23,6 +23,7 @@ public static class ApplicationException
                         ValidationException => HttpStatusCode.BadRequest,
                         ResourceNotFoundException => HttpStatusCode.NotFound,
                         BusinessException => HttpStatusCode.Conflict,
+                        ExternalServiceException => HttpStatusCode.BadGateway,
                         _ => HttpStatusCode.InternalServerError
                     };
                     context.Response.StatusCode = (int)statusCode;

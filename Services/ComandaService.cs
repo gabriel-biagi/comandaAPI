@@ -105,8 +105,17 @@ REGRAS:
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError("Erro ao processar na API do Groq. Status Code: {StatusCode}, Reason: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
-            throw new InvalidOperationException($"Erro ao processar na API do Groq. Status Code: {response.StatusCode}, Reason: {response.ReasonPhrase}");
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            _logger.LogError(
+                "Erro ao processar na API do Groq. Status Code: {StatusCode}, Reason: {ReasonPhrase}, Response: {Response}",
+                response.StatusCode,
+                response.ReasonPhrase,
+                errorContent);
+
+            throw new ExternalServiceException(
+                "Erro ao processar na API da Groq.",
+                response.StatusCode);
         }
 
         string jsonResponse = await response.Content.ReadAsStringAsync();
@@ -123,3 +132,4 @@ REGRAS:
         var resultadoJson = JsonSerializer.Deserialize<ComandaResponse>(resultadoText ?? throw new InvalidOperationException());
         return resultadoJson;
     }
+}
