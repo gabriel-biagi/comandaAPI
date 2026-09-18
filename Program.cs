@@ -28,6 +28,7 @@ builder.Services.AddDbContext<ComandaDbContext>(options =>
     options.UseSqlite("Data Source=comanda.db"));
 
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IComandaService, ComandaService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ComandaDbContext>()
