@@ -1,9 +1,9 @@
-using comandaAPI.Models.Identity;
+using comandaAPI.Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace comandaAPI.Models.Context;
+namespace comandaAPI.Infrastructure.Data.Context;
 
 public class ComandaDbContext : IdentityDbContext<ApplicationUser>
 {

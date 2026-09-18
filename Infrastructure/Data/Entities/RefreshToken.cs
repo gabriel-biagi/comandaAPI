@@ -1,4 +1,4 @@
-namespace comandaAPI.Models.Identity;
+namespace comandaAPI.Infrastructure.Data.Entities;
 
 public class RefreshTokenEntity
 {

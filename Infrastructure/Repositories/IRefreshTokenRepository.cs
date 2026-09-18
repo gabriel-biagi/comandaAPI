@@ -1,4 +1,4 @@
-using comandaAPI.Models.Identity;
+using comandaAPI.Infrastructure.Data.Entities;
 
 namespace comandaAPI.Infrastructure.Repositories;
 

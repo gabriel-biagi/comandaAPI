@@ -1,6 +1,6 @@
 using System.Text;
-using comandaAPI.Models.Context;
-using comandaAPI.Models.Identity;
+using comandaAPI.Infrastructure.Data.Context;
+using comandaAPI.Infrastructure.Data.Entities;
 using comandaAPI.Services;
 using comandaAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;

@@ -1,5 +1,5 @@
-using comandaAPI.Models.Context;
-using comandaAPI.Models.Identity;
+using comandaAPI.Infrastructure.Data.Context;
+using comandaAPI.Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace comandaAPI.Infrastructure.Repositories;
