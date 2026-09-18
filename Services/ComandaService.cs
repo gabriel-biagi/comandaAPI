@@ -3,6 +3,8 @@ using comandaAPI.Models.DTOs.Response;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using comandaAPI.Services.Interfaces;
+using comandaAPI.Domain.Exception;
 
 namespace comandaAPI.Services;
 
@@ -90,7 +92,7 @@ REGRAS:
 10. Não invente
 - Use somente informações presentes nas mensagens ou claramente determinadas pelo contexto.
 - Quando uma informação não puder ser determinada com segurança, use ""Não Informado"" ou []." },
-                new { role = "user", content = request.Text }
+                new { role = "user", content = comandaRequest.Text }
             },
             response_format = new { type = "json_object" }
         };
