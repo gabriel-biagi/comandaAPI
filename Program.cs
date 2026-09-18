@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using comandaAPI.Middlewares;
 using comandaAPI.Infrastructure.Repositories;
 using comandaAPI.Domain.Exception;
+using comandaAPI.Infrastructure.Data.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,7 +72,6 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
@@ -86,6 +86,21 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 var app = builder.Build();
+
+//seed
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var configuration = services.GetRequiredService<IConfiguration>();
+
+    await IdentitySeeder.SeedAsync(
+        userManager,
+        roleManager,
+        configuration);
+}
 
 app.UseCors();
 
