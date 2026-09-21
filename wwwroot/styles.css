@@ -1,35 +1,134 @@
+/* =========================================================
+   Processador de Comanda WhatsApp — styles.css
+   Mobile-first. Somente CSS: nenhum ID, classe ou atributo
+   usado pelo app.js foi alterado.
+
+   Sumário
+    0. Tokens                    6. Status e spinner
+    1. Base                      7. Modal de revisão (bottom sheet)
+    2. Layout                    8. Cards de pedido e acompanhamentos
+    3. Tipografia                9. Telas maiores (tablet / desktop)
+    4. Campos                   10. Movimento reduzido
+    5. Botões
+   ========================================================= */
+
+
+/* ---------- 0. TOKENS ---------- */
+
 :root {
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
-    --accent-color: #3b82f6;
-    --accent-hover: #2563eb;
-    --text-color: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-color: #334155;
-    --error-color: #ef4444;
-    --success-color: #22c55e;
+    color-scheme: light;
+
+    /* Superfícies */
+    --bg: #f2f3f7;              /* fundo da página (cinza frio) */
+    --surface: #ffffff;         /* cards, campos, modal */
+    --surface-muted: #f6f7f9;   /* cards aninhados, campo somente leitura */
+
+    /* Texto */
+    --text: #17181c;
+    --text-muted: #565d6b;      /* 6,6:1 sobre branco */
+    --placeholder: #6b7180;     /* 4,8:1 sobre branco */
+
+    /* Bordas */
+    --border: #e3e5ea;          /* divisórias e cards (decorativas) */
+    --border-strong: #c5c9d1;   /* botões secundários, linhas tracejadas */
+    --border-control: #8a91a0;  /* campos: 3:1 contra branco (WCAG 1.4.11) */
+
+    /* Ação */
+    --ink: #17181c;             /* botão primário */
+    --ink-hover: #34363d;
+    --accent: #0052ff;          /* foco e rótulo ativo */
+    --accent-soft: rgba(0, 82, 255, 0.14);
+
+    /* Estados */
+    --danger: #b42318;
+    --danger-bg: #fef3f2;
+    --danger-bg-hover: #fee4e2;
+    --danger-border: #fda29b;
+    --success: #067647;
+    --success-bg: #ecfdf3;
+    --success-border: #75e0a7;
+
+    /* Tipografia */
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+    /* Espaçamento */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+
+    /* Raios — cada nível de hierarquia tem o seu */
+    --radius-control: 0.875rem; /* campos e botões */
+    --radius-card: 1.25rem;     /* cards */
+    --radius-sheet: 1.75rem;    /* modal e login */
+
+    /* Sombras — só onde algo flutua sobre a página */
+    --shadow-float: 0 12px 32px -8px rgba(23, 24, 28, 0.14), 0 2px 6px rgba(23, 24, 28, 0.06);
+    --shadow-toast: 0 8px 24px -6px rgba(23, 24, 28, 0.2);
+    --shadow-sheet: 0 -12px 40px rgba(23, 24, 28, 0.22);
+    --shadow-dialog: 0 24px 64px -12px rgba(23, 24, 28, 0.35);
+
+    /* Layout */
+    --page-pad: 0.75rem;
+    --tap: 3rem;                /* altura mínima de campos e botões (48px) */
+}
+
+
+/* ---------- 1. BASE ---------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    font-family: var(--font);
+    font-size: 1rem;
+    line-height: 1.5;
+    background-color: var(--bg);
+    color: var(--text);
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 1rem;
+    padding: var(--page-pad);
+    -webkit-tap-highlight-color: transparent;
 }
 
+/* Impede o fundo de rolar por trás do modal aberto (melhoria progressiva) */
+body:has(.modal.active) {
+    overflow: hidden;
+}
+
+button,
+input,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+
+/* ---------- 2. LAYOUT ---------- */
+
+/* O JS alterna .active — mantido exatamente como estava */
 .screen {
     display: none;
     width: 100%;
+    margin-block: auto;         /* centraliza verticalmente quando sobra espaço */
 }
 
 .screen.active {
@@ -37,155 +136,421 @@ body {
 }
 
 .container {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 1.5rem;
     width: 100%;
-    max-width: 600px;
-    padding: 2.5rem;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    margin-inline: auto;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-4);
 }
 
-h1 {
-    font-size: 1.875rem;
-    text-align: center;
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    margin-bottom: 1rem;
+/* Login: um único card flutuante */
+#loginScreen .container {
+    max-width: 26rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sheet);
+    padding: var(--space-6);
+    gap: var(--space-5);
+    box-shadow: var(--shadow-float);
+}
+
+/* Comanda: o container vira só um agrupador; quem tem "cara de card" são as seções */
+#comandaScreen {
+    margin-block: 0 auto;       /* alinhada ao topo */
+}
+
+#comandaScreen .container {
+    max-width: 62rem;
 }
 
 .header {
+    order: -2;                  /* sempre no topo */
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-inline: var(--space-1);
+}
+
+/* Cada bloco direto do container da comanda vira um card branco sobre o fundo cinza */
+#comandaScreen .container > .input-group {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--space-5);
+    gap: var(--space-3);
+}
+
+/* Nesses cards, o rótulo funciona como título da seção */
+#comandaScreen .container > .input-group > label {
+    font-size: 1.0625rem;
+}
+
+#comandaScreen .container > .input-group > textarea {
+    flex: 1 1 auto;             /* a caixa de texto ocupa o espaço que sobrar no card */
+    min-height: 8.5rem;
+}
+
+/* A mensagem sobe para logo abaixo do cabeçalho e acompanha a rolagem:
+   no celular ela ficava embaixo da tela, fora da vista */
+#comandaStatus {
+    order: -1;
+    position: sticky;
+    top: var(--space-3);
+    z-index: 20;
+    box-shadow: var(--shadow-toast);
+}
+
+
+/* ---------- 3. TIPOGRAFIA ---------- */
+
+h1 {
+    font-size: 1.625rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-align: left;
 }
 
 .header h1 {
-    margin: 0;
+    font-size: 1.375rem;
 }
 
-.logout-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+h2 {
+    font-size: 1.25rem;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.01em;
 }
+
+h3 {
+    font-size: 1rem;
+    line-height: 1.3;
+    font-weight: 700;
+}
+
+label {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    font-weight: 600;
+    color: var(--text);
+    transition: color 0.15s;
+}
+
+
+/* ---------- 4. CAMPOS ---------- */
 
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
-label {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    font-weight: 500;
+/* O rótulo fica azul quando o campo dele está em foco */
+.input-group:has(> input:focus) > label,
+.input-group:has(> textarea:focus) > label {
+    color: var(--accent);
 }
 
 input,
 textarea {
     width: 100%;
-    background-color: rgba(15, 23, 42, 0.8);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    color: var(--text-color);
-    padding: 0.875rem 1rem;
-    font-size: 0.95rem;
-    outline: none;
-    transition: all 0.2s;
+    min-height: var(--tap);
+    padding: 0.75rem var(--space-4);
+    background-color: var(--surface);
+    border: 1px solid var(--border-control);
+    border-radius: var(--radius-control);
+    font-size: 1rem;            /* 16px: evita o zoom automático do iOS ao focar */
+    line-height: 1.4;
+    outline: 2px solid transparent; /* aparece no modo de alto contraste */
+    outline-offset: 2px;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--placeholder);
+    opacity: 1;
 }
 
 input:focus,
 textarea:focus {
-    border-color: var(--accent-color);
-    background-color: rgba(15, 23, 42, 1);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 0 4px var(--accent-soft);
+}
+
+input:disabled,
+textarea:disabled {
+    background-color: var(--surface-muted);
+    color: var(--text-muted);
+    cursor: not-allowed;
 }
 
 textarea {
-    height: 120px;
+    min-height: 8rem;
+    line-height: 1.5;
     resize: vertical;
 }
 
+/* Somente leitura: fundo cinza e cursor de texto (dá para selecionar e copiar) */
 textarea[readonly] {
-    background-color: #0a0f1a;
-    cursor: not-allowed;
+    background-color: var(--surface-muted);
+    cursor: text;
 }
 
-.button-group {
-    display: flex;
-    gap: 0.75rem;
+/* O resultado é o texto da comanda impressa, de largura fixa (32 colunas) */
+#outputTexto {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
 }
 
+#editValor {
+    font-variant-numeric: tabular-nums;
+}
+
+/* O HTML tem style="height: 80px" nesse campo; o min-height garante uma área confortável */
+.modal-body textarea {
+    min-height: 5.5rem;
+}
+
+@media (hover: hover) {
+    input:enabled:hover,
+    textarea:enabled:hover {
+        border-color: #5f6675;
+    }
+    input:enabled:focus:hover,
+    textarea:enabled:focus:hover {
+        border-color: var(--accent);
+    }
+}
+
+
+/* ---------- 5. BOTÕES ---------- */
+
+/* Base = botão primário (o #btnEnviar não tem classe e cai aqui) */
 button {
-    flex: 1;
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 0.75rem;
-    padding: 0.875rem 1rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
+    min-height: var(--tap);
+    padding: 0.75rem var(--space-5);
+    background-color: var(--ink);
+    color: #ffffff;
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-control);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
 }
 
-button:hover {
-    background-color: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+button:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
 }
 
-button:active {
-    transform: translateY(0);
+button:enabled:active {
+    transform: scale(0.98);
 }
 
 button:disabled {
-    opacity: 0.5;
+    opacity: 0.55;
     cursor: not-allowed;
+}
+
+/* Carregando: o botão fica desabilitado mas o spinner precisa continuar visível */
+#btnEnviar:disabled {
+    opacity: 0.9;
+    cursor: progress;
 }
 
 button.primary {
     width: 100%;
 }
 
-button.secondary {
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
+/* Secundário: contorno, como o "Reset" e o "Add color" da referência */
+button.secondary,
+.logout-btn {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--border-strong);
 }
 
-button.secondary:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: var(--text-muted);
+.logout-btn {
+    flex: none;
+    min-height: 2.75rem;
+    padding: 0.5rem var(--space-4);
+    font-size: 0.9375rem;
 }
 
+.small {
+    min-height: 2.75rem;
+    padding: 0.5rem var(--space-4);
+    font-size: 0.9375rem;
+}
+
+/* Adicionar (pedido / acompanhamento): borda tracejada = "espaço para mais um" */
+.btn-adicionar-acompanhamento,
+#btnAdicionarPedido {
+    background-color: transparent;
+    color: var(--text);
+    border: 1.5px dashed var(--border-control);
+}
+
+/* Remover (pedido / acompanhamento): vermelho suave; o texto também diz "remover" */
+.btn-remover-pedido,
+.btn-remover-acompanhamento {
+    flex: none;
+    background-color: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger-border);
+}
+
+.btn-remover-pedido {
+    min-height: 2.75rem;
+    padding: 0.5rem var(--space-4);
+    font-size: 0.9375rem;
+}
+
+/* O texto do botão é só "-": aumentamos para virar um ícone legível */
+.btn-remover-acompanhamento {
+    width: var(--tap);
+    padding: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+/* Fechar (×): círculo cinza, como na referência do Luma */
+.close-btn {
+    flex: none;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    background-color: var(--bg);
+    color: var(--text);
+    border-color: transparent;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    line-height: 1;
+    font-weight: 400;
+}
+
+/* Grupo de botões: empilhado no celular (largura total), lado a lado depois */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.button-group > button {
+    width: 100%;
+}
+
+/* Hover só em dispositivos que têm mouse (no toque o hover "gruda") */
+@media (hover: hover) {
+    button:enabled:hover {
+        background-color: var(--ink-hover);
+        border-color: var(--ink-hover);
+    }
+
+    button.secondary:enabled:hover,
+    .logout-btn:enabled:hover {
+        background-color: var(--bg);
+        border-color: var(--border-control);
+    }
+
+    .btn-adicionar-acompanhamento:enabled:hover,
+    #btnAdicionarPedido:enabled:hover {
+        background-color: var(--surface-muted);
+        border-color: var(--text);
+    }
+
+    .btn-remover-pedido:enabled:hover,
+    .btn-remover-acompanhamento:enabled:hover {
+        background-color: var(--danger-bg-hover);
+        border-color: var(--danger);
+    }
+
+    .close-btn:enabled:hover {
+        background-color: var(--border);
+        border-color: transparent;
+    }
+}
+
+
+/* ---------- 6. STATUS E SPINNER ---------- */
+
+/* O JS define a classe como "status-message error|success" */
 .status-message {
-    font-size: 0.875rem;
-    text-align: center;
-    min-height: 1.25rem;
+    --tone: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    color: var(--tone);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.45;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.status-message:empty {
+    display: none;
 }
 
 .status-message.error {
-    color: var(--error-color);
+    --tone: var(--danger);
+    background-color: var(--danger-bg);
+    border-color: var(--danger-border);
 }
 
 .status-message.success {
-    color: var(--success-color);
+    --tone: var(--success);
+    background-color: var(--success-bg);
+    border-color: var(--success-border);
 }
 
+/* Ícone com formato próprio: o estado não depende só da cor */
+.status-message.error::before,
+.status-message.success::before {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.1rem;
+    border-radius: 50%;
+    background-color: var(--tone);
+    color: #ffffff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.status-message.error::before {
+    content: "!";
+}
+
+.status-message.success::before {
+    content: "✓";
+}
+
+/* O JS controla display (none/block) por estilo inline — só cuidamos da aparência */
 .spinner {
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid transparent;
-    border-top-color: currentColor;
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     display: none;
@@ -195,172 +560,265 @@ button.secondary:hover {
     to { transform: rotate(360deg); }
 }
 
-/* ========== MODAL ==========*/
 
+/* ---------- 7. MODAL DE REVISÃO (bottom sheet no celular) ---------- */
+
+/* O JS alterna .active — mantido */
 .modal {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    inset: 0;
     z-index: 1000;
+    align-items: flex-end;      /* celular: gaveta colada embaixo */
     justify-content: center;
-    align-items: center;
+    background-color: rgba(23, 24, 28, 0.55);
 }
 
 .modal.active {
     display: flex;
+    animation: overlay-in 0.2s ease-out;
 }
 
 .modal-content {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 1.5rem;
-    width: 90%;
-    max-width: 600px;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.modal-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    width: 100%;
+    max-height: 92vh;
+    max-height: 92dvh;
+    background-color: var(--surface);
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    box-shadow: var(--shadow-sheet);
+    overflow: hidden;           /* quem rola é o .modal-body */
+}
+
+.modal.active .modal-content {
+    animation: sheet-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Cabeçalho e rodapé ficam fixos; só o corpo rola */
+.modal-header {
+    flex: none;
+    display: flex;
     align-items: center;
-    padding: 1.5rem 1.5rem 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.75rem;
-    cursor: pointer;
-    padding: 0;
-    width: auto;
-    height: auto;
-    transition: color 0.2s;
-}
-
-.close-btn:hover {
-    color: var(--text-color);
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--border);
 }
 
 .modal-body {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-5);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: var(--space-5) var(--space-3);
+    align-content: start;
+}
+
+/* Por padrão cada campo ocupa a linha inteira... */
+.modal-body > .input-group {
+    grid-column: 1 / -1;
+}
+
+/* ...exceto Valor Total e Forma de Pagamento, que dividem a linha.
+   Atenção: depende da ordem dos blocos no HTML (3º e 4º filhos). */
+.modal-body > .input-group:nth-child(3),
+.modal-body > .input-group:nth-child(4) {
+    grid-column: auto;
 }
 
 .modal-footer {
+    flex: none;
     display: flex;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--border);
+    background-color: var(--surface);
 }
 
-.modal-footer button {
-    flex: 1;
+/* Confirmar tem o dobro do peso de Cancelar */
+.modal-footer > button {
+    flex: 1 1 0;
+    width: auto;
 }
 
-/* Pedido Card */
-.pedido-card {
-    background-color: rgba(15, 23, 42, 0.8);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1rem;
+.modal-footer > .primary {
+    flex-grow: 2;
+}
+
+@keyframes overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes sheet-in {
+    from { transform: translateY(2rem); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+
+
+/* ---------- 8. CARDS DE PEDIDO E ACOMPANHAMENTOS ---------- */
+/* Esses elementos são gerados pelo JS (adicionarPedidoCard): mesmas classes de antes */
+
+#pedidosList {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    position: relative;
+    gap: var(--space-3);
 }
 
+.pedido-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); /* Item | Tamanho */
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background-color: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+}
+
+/* Cabeçalho e Acompanhamentos ocupam a largura toda */
+.pedido-header,
+.pedido-card > .input-group:last-child {
+    grid-column: 1 / -1;
+}
+
+/* A linha tracejada repete o separador da comanda impressa (-----) */
 .pedido-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-}
-
-.pedido-header h3 {
-    font-size: 1rem;
-    margin: 0;
-}
-
-.btn-remover-pedido {
-    background-color: var(--error-color);
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-}
-
-.btn-remover-pedido:hover {
-    background-color: #dc2626;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1.5px dashed var(--border-strong);
 }
 
 .acompanhamentos-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .acompanhamento-item {
     display: flex;
-    gap: 0.5rem;
     align-items: center;
+    gap: var(--space-2);
 }
 
 .acompanhamento-item input {
     flex: 1;
+    min-width: 0;               /* deixa o campo encolher em telas estreitas */
 }
 
-.btn-remover-acompanhamento {
-    background-color: var(--error-color);
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-
-.btn-remover-acompanhamento:hover {
-    background-color: #dc2626;
-}
-
-.btn-adicionar-acompanhamento {
-    background-color: rgba(34, 197, 94, 0.2);
-    border: 1px solid var(--success-color);
-    color: var(--success-color);
-    padding: 0.5rem;
-    font-size: 0.75rem;
-}
-
-.btn-adicionar-acompanhamento:hover {
-    background-color: rgba(34, 197, 94, 0.3);
-}
-
-.small {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 1.25rem;
+/* Telas muito estreitas: Item e Tamanho empilham */
+@media (max-width: 23.75rem) {
+    .pedido-card {
+        grid-template-columns: minmax(0, 1fr);
     }
-    .button-group {
-        flex-direction: column;
+}
+
+
+/* ---------- 9. TELAS MAIORES ---------- */
+
+/* Tablet e acima: botões lado a lado, modal vira diálogo centralizado */
+@media (min-width: 40rem) {
+    :root {
+        --page-pad: 2rem;
     }
-    .header {
-        flex-direction: column;
-        gap: 1rem;
+
+    #loginScreen .container {
+        padding: var(--space-8);
     }
+
     .header h1 {
-        text-align: center;
+        font-size: 1.625rem;
+    }
+
+    #comandaScreen .container > .input-group {
+        padding: var(--space-6);
+    }
+
+    .button-group {
+        flex-direction: row;
+    }
+
+    .button-group > button {
+        flex: 1;
+        width: auto;
+    }
+
+    .modal {
+        align-items: center;
+        padding: var(--space-6);
+    }
+
+    .modal-content {
+        max-width: 40rem;
+        max-height: 90vh;
+        max-height: 90dvh;
+        border-radius: var(--radius-sheet);
+        box-shadow: var(--shadow-dialog);
+    }
+
+    .modal-header {
+        padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6);
+    }
+
+    .modal-body {
+        padding: var(--space-6);
+    }
+
+    .modal-footer {
+        padding: var(--space-4) var(--space-6);
+    }
+}
+
+/* Notebook e desktop: entrada e resultado lado a lado */
+@media (min-width: 56rem) {
+    :root {
+        --page-pad: 2.5rem;
+    }
+
+    #comandaScreen .container {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-4);
+    }
+
+    .header,
+    #comandaStatus {
+        grid-column: 1 / -1;
+    }
+
+    #comandaScreen .container > .input-group > textarea {
+        min-height: 15rem;
+    }
+}
+
+
+/* ---------- 10. MOVIMENTO REDUZIDO ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .modal.active,
+    .modal.active .modal-content {
+        animation: none;
+    }
+
+    button,
+    input,
+    textarea,
+    label {
+        transition: none;
+    }
+
+    button:enabled:active {
+        transform: none;
+    }
+
+    /* O spinner continua girando (é indicador de carregamento), só mais devagar */
+    .spinner {
+        animation-duration: 1.6s;
     }
 }
