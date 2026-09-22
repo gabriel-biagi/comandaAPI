@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5084';
+const API_URL = 'http://192.168.2.76:5084';
 
 // ========== FETCH COM AUTO-REFRESH ==========
 

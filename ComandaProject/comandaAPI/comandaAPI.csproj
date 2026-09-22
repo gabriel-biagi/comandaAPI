@@ -1,5 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
+	<ItemGroup>
+		<Compile Remove="comandaAPI.Tests\**" />
+		<EmbeddedResource Remove="comandaAPI.Tests\**" />
+		<None Remove="comandaAPI.Tests\**" />
+	</ItemGroup>
+	
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
