@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../comandaAPI.Tests/comandaAPI.Tests.csproj" />
+  <Project Path="comandaAPI.csproj" />
+</Solution>
