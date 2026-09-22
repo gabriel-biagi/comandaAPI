@@ -1,5 +1,10 @@
 # ComandaAPI
 
+![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+![Status](https://img.shields.io/badge/status-MVP%20funcional-brightgreen?style=flat-square)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue?style=flat-square)
+
 API para transformar mensagens desestruturadas de pedidos em comandas organizadas, utilizando **IA para extração de dados**, autenticação segura e integração com **impressoras térmicas Bluetooth**.
 
 O projeto nasceu de uma necessidade real em uma açaiteria: reduzir o trabalho manual de interpretar pedidos recebidos pelo WhatsApp, revisar as informações e preparar a comanda para impressão.
@@ -7,6 +12,24 @@ O projeto nasceu de uma necessidade real em uma açaiteria: reduzir o trabalho m
 > **MVP funcional e validado em ambiente real**, incluindo processamento, revisão e impressão térmica.
 
 **Open-source • MIT License**
+
+---
+
+## 📑 Índice
+
+- [⚙️ Como funciona](#como-funciona)
+- [✨ Funcionalidades](#funcionalidades)
+- [🛠️ Stack](#stack)
+- [🏗️ Arquitetura](#arquitetura)
+- [🤖 Processamento com IA](#processamento-com-ia)
+- [🔐 Autenticação](#autenticação)
+- [⚠️ Tratamento de exceções](#tratamento-de-exceções)
+- [💾 Persistência](#persistência)
+- [🖨️ Impressão térmica](#impressão-térmica)
+- [🌐 Endpoints principais](#endpoints-principais)
+- [▶️ Executando o projeto](#executando-o-projeto)
+- [📊 Status](#status)
+- [📜 Licença](#licença)
 
 ---
 
@@ -98,32 +121,41 @@ A IA atua como **extratora de informações**. O resultado passa por uma etapa d
 O projeto utiliza uma separação de responsabilidades baseada em **Controllers, Services, Repositories, Infrastructure e Middleware**.
 
 ```text
-comandaAPI/
-├── Controllers/
-│   ├── AuthController.cs
-│   └── ComandaController.cs
+ComandaProject/
 │
-├── Services/
-│   ├── ComandaService.cs
-│   ├── TokenService.cs
-│   └── Interfaces/
+├── comandaAPI/                          # Projeto principal da API
+│   ├── Controllers/
+│   │   ├── AuthController.cs
+│   │   └── ComandaController.cs
+│   │
+│   ├── Services/
+│   │   ├── ComandaService.cs
+│   │   ├── TokenService.cs
+│   │   └── Interfaces/
+│   │
+│   ├── Infrastructure/
+│   │   ├── Data/
+│   │   │   ├── Context/
+│   │   │   ├── Entities/
+│   │   │   └── Seed/
+│   │   └── Repositories/
+│   │
+│   ├── Domain/
+│   │   └── Exception/
+│   │
+│   ├── Middlewares/
+│   ├── Models/
+│   │   └── DTOs/
+│   ├── Migrations/
+│   ├── wwwroot/
+│   ├── Program.cs
+│   ├── comandaAPI.csproj
+│   └── comandaAPI.sln
 │
-├── Infrastructure/
-│   ├── Data/
-│   │   ├── Context/
-│   │   ├── Entities/
-│   │   └── Seed/
-│   └── Repositories/
-│
-├── Domain/
-│   └── Exception/
-│
-├── Middlewares/
-├── Models/
-│   └── DTOs/
-├── Migrations/
-├── wwwroot/
-└── Program.cs
+└── comandaAPI.Tests/                    # Projeto de testes
+    ├── ServicesTests/
+    │   └── ComandaServiceTests.cs
+    └── comandaAPI.Tests.csproj
 ```
 
 ### Responsabilidades
